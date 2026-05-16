@@ -1,5 +1,6 @@
 
 import re
+import unicodedata
 
 
 Inputs = {
@@ -13,11 +14,19 @@ Inputs = {
 
 Exits = ["exit", "quit", "goodbye", "bye"]
 
+def Sanitize(user_input): 
+    user_input= user_input.strip() 
+    user_input= re.sub(r'[\x00-\x1F\x7F]', '', user_input) 
+    user_input = re.sub(r'\s+', ' ', user_input)
+    user_input = unicodedata.normalize('NFKD', user_input)
+    user_input = user_input.lower()
+    return user_input
 
 while True:
     user_input = input("You: ")
-    if user_input.lower() in Exits:
+    user_input = Sanitize(user_input)
+    if user_input in Exits:
         print("Chatbot: Goodbye!")
         break
-    response = Inputs.get(user_input.lower().strip(), "I'm sorry, I don't understand that.")
+    response = Inputs.get(user_input, "I'm sorry, I don't understand that.")
     print(f"Chatbot: {response}")
