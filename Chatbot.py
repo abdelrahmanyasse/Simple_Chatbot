@@ -1,19 +1,22 @@
 import re
 import unicodedata
+import os
+from dotenv import load_dotenv
+import google.generativeai as genai
+load_dotenv()
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+model = genai.GenerativeModel(
+    model_name="gemini-2.0-flash-lite",  # higher free tier limits
+    system_instruction="You are Jarvis, a helpful and friendly assistant."
+)
 
 
-inputs = {
-    "hi": "Hello! How can I assist you today?",
-    "hello": "Hi there! What can I do for you?",
-    "how are you": "i am very good, thank you for asking! How about you?",
-    "what is your name": "I am jarvis a simple chatbot created to assist you.",
-    "what can you do": "I can answer simple questions and have a basic conversation with you.",
-    "where are you from": "I am a virtual assistant created by a developer.",
-}
+chat = model.start_chat(history=[])
 
 exits = ["exit", "quit", "goodbye", "bye","end chat","ciao"]
 
-def Sanitize(user_input): 
+def sanitize(user_input): 
     user_input= user_input.strip()
     user_input= re.sub(r'[\x00-\x1F\x7F]', '', user_input) 
     user_input = re.sub(r'\s+', ' ', user_input)
@@ -24,9 +27,11 @@ def Sanitize(user_input):
 
 while True:
     user_input = input("You: ")
-    user_input = Sanitize(user_input)
-    if user_input in exits:
-        print("Chatbot: Goodbye!")
+    sanitized = sanitize(user_input)
+
+    if sanitized in exits:
+        print("Jarvis: Goodbye!")
         break
-    response = inputs.get(user_input, "I'm sorry, I don't understand that.")
-    print(f"Chatbot: {response}")
+
+    response = chat.send_message(sanitized)
+    print(f"Jarvis: {response.text}")
